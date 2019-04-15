@@ -1,24 +1,4 @@
 export const HEX = '0123456789abcdef';
-// export const STR2ARR = (input) => {
-// 	let o = [], i = -1, x, y;
-//     while (++i < input.length) {
-// 		/* Decode utf-16 surrogate pairs */
-// 		x = input.charCodeAt(i);
-// 		y = i + 1 < input.length ? input.charCodeAt(i + 1) : 0;
-// 		if (0xD800 <= x && x <= 0xDBFF && 0xDC00 <= y && y <= 0xDFFF) {
-// 			x = 0x10000 + ((x & 0x03FF) << 10) + (y & 0x03FF);
-// 			i++;
-// 		}
-
-//       	/* Encode output as utf-8 */
-// 		if (x <= 0x7F) o.push(x);
-// 		else if (x <= 0x7FF) o.push(0xC0 | x >>> 6 & 0x1F, 0x80 | x & 0x3F)
-// 		else if (x <= 0xFFFF) o.push(0xE0 | x >>> 12 & 0x0F, 0x80 | x >>> 6 & 0x3F, 0x80 | x & 0x3F);
-// 		else if (x <= 0x1FFFFF) o.push(0xF0 | x >>> 18 & 0x07, 0x80 | x >>> 12 & 0x3F, 0x80 | x >>> 6 & 0x3F, 0x80 | x & 0x3F);
-//     }
-//     return o;
-// }
-
 /**
  * 字符串转code数组
  * @param {String} str 字符串
@@ -74,8 +54,67 @@ export const UTF8_DECODE = (bin) => {
     return s;
 };
 
+export const B64MAP_S = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+export const B64MAP = STR2CODE(B64MAP_S);
+export const B64PAD_S = '=';
+export const B64PAD = B64PAD_S.charCodeAt(0);
 
-export const B64KEYS = STR2CODE('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=');
+export const hex2b64 = (h) => {
+    var i, c, r = '';
+    for (i = 0; i + 3 <= h.length; i += 3) {
+        c = parseInt(h.substr(i, 3), 16);
+        r += B64MAP_S.charAt(c >> 6) + B64MAP_S.charAt(c & 63);
+    }
+    if (i + 1 == h.length) {
+        c = parseInt(h.substr(i, 1), 16);
+        r += B64MAP_S.charAt(c << 2);
+    } else if (i + 2 == h.length) {
+        c = parseInt(h.substr(i, 2), 16);
+        r += B64MAP_S.charAt(c >> 2) + B64MAP_S.charAt((c & 3) << 4);
+    }
+    while ((r.length & 3) > 0) r += B64PAD_S;
+    return r;
+}
+
+export const BIN2HEX = (bin) => {
+    let output = [], x;
+    for(let i = 0, len = bin.length; i < len; i++){
+        x = bin[i];
+        output.push(x >>> 4 & 0x0F);
+        output.push(x & 0x0F);
+    }
+    return output;
+};
+
+export const HEX2B64 = (bin) => {
+    let i, c, ret = [];
+    for (i = 0; i + 3 <= bin.length; i += 3) {
+        c = bin.slice(i, i + 3).reverse().reduce((a, b, i) => (a + Math.pow(0x10, i) * b));
+        ret.push(B64MAP[c >> 6]);
+        ret.push(B64MAP[c & 63])
+    }
+    if (i + 1 == bin.length) {
+        c = bin.slice(i, i + 1).reverse().reduce((a, b, i) => (a + Math.pow(0x10, i) * b));
+        ret.push(B64MAP[c << 2])
+    } else if (i + 2 == bin.length) {
+        c = bin.slice(i, i + 2).reverse().reduce((a, b, i) => (a + Math.pow(0x10, i) * b));
+        ret.push(B64MAP[c >> 2]);
+        ret.push(B64MAP[(c & 3) << 4]);
+    }
+    while ((ret.length & 3) > 0) ret.push(B64PAD);
+    return ret;
+};
+
+function rstr2hex(input) {
+    var hex_tab = '0123456789ABCDEF';
+    var output = '';
+    var x;
+    for (var i = 0; i < input.length; i++) {
+        x = input.charCodeAt(i);
+        output += hex_tab.charAt(x >>> 4 & 0x0F) + hex_tab.charAt(x & 0x0F);
+    }
+    return output;
+}
 
 /**
  * BIN -> BASE64
@@ -96,10 +135,10 @@ export const BASE64_ENCODE = (bin) => {
         } else if (isNaN(c3)) {
             e4 = 64;
         }
-        o.push(B64KEYS[e1]);
-        o.push(B64KEYS[e2]);
-        o.push(B64KEYS[e3]);
-        o.push(B64KEYS[e4]);
+        o.push(B64MAP[e1]);
+        o.push(B64MAP[e2]);
+        o.push(B64MAP[e3]);
+        o.push(B64MAP[e4]);
     }
     return o;
 };
@@ -111,10 +150,10 @@ export const BASE64_ENCODE = (bin) => {
 export const BASE64_DECODE = (bin) => {
     let o = [], c1, c2, c3, e1, e2, e3, r4, i = 0;
     while (i < bin.length) {
-        e1 = B64KEYS.indexOf(bin[i++]);
-        e2 = B64KEYS.indexOf(bin[i++]);
-        e3 = B64KEYS.indexOf(bin[i++]);
-        r4 = B64KEYS.indexOf(bin[i++]);
+        e1 = B64MAP.indexOf(bin[i++]);
+        e2 = B64MAP.indexOf(bin[i++]);
+        e3 = B64MAP.indexOf(bin[i++]);
+        r4 = B64MAP.indexOf(bin[i++]);
         c1 = (e1 << 2) | (e2 >> 4);
         c2 = ((e2 & 15) << 4) | (e3 >> 2);
         c3 = ((e3 & 3) << 6) | r4;
@@ -145,19 +184,3 @@ export const TO_BIN = arg => {
     }
     return arg;
 }
-
-export const base64 = {
-    encode: s => [
-        TO_BIN, BASE64_ENCODE, CODE2STR
-    ].reduce((a, b) => b(a), s),
-    decode: s => [
-        TO_BIN, BASE64_DECODE, UTF8_DECODE, CODE2STR
-    ].reduce((a, b) => b(a), s),
-};
-
-export const utf8 = {
-    encode: s => UTF8_ENCODE(TO_BIN(s)),
-    decode: b => CODE2STR(UTF8_DECODE(TO_BIN(b)))
-}
-
-// console.log(base64.decode(base64.encode('中文abc')))

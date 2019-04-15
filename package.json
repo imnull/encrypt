@@ -1,0 +1,25 @@
+{
+  "name": "encrypt",
+  "version": "1.0.0",
+  "description": "Some encrypting-tools of Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imnull/encrypt.git"
+  },
+  "keywords": [
+    "javascript",
+    "js",
+    "md5",
+    "base64"
+  ],
+  "author": "imnull@outlook.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imnull/encrypt/issues"
+  },
+  "homepage": "https://github.com/imnull/encrypt#readme"
+}
